@@ -21,24 +21,41 @@ class twistedBot(irc.IRCClient):
     def joined(self, channel):
     	print "Joined "+channel
 
-    def privmsg(self, user, chanel, msg):
+    def privmsg(self, user, channel, msg):
+        print ("%s %s %s")%(user, channel, msg)
         if "loudbot" in user:
             return
     	if not user:
     		return
+        
+        newmsg = ""
+        prefix = ""
     	if self.nickname in msg:
-    		msg = re.compile(self.nickname+"[:,]* ?", re.I).sub("", msg)
-    		prefix = "%s: "%(user.split('!', 1)[0],)
+            msg = re.compile(self.nickname+"[:,]* ?", re.I).sub("", msg)
+            prefix = "%s: "%(user.split('!', 1)[0],)
+            newmsg = self.getsentence(prefix,msg)
         elif "<3" in msg:
             msg = re.compile("<3"+"[:,]* ?", re.I).sub("", msg)
             prefix = "%s: "%(user.split('!', 1)[0],)
-    	else:
-    		prefix = ""
-    	brain.add_to_brain(msg, self.factory.chain_length, write_to_file=True)
-    	if prefix or random.random() <= self.factory.chattiness:
-    		sentence = brain.generate_sentence(msg, self.factory.chain_length, self.factory.max_words)
-    		if sentence:
-    			self.msg(self.factory.channel, prefix+sentence)
+            newmsg = self.getsentence(prefix,msg)
+    	elif channel == self.nickname:
+    	    newmsg = self.getsentence(prefix,msg)
+        elif random.random() <= self.factory.chattiness:
+            newmsg = self.getsentence(prefix,msg)
+        
+        if channel == self.nickname:
+            self.msg(user.split('!', 1)[0], newmsg)
+        elif newmsg != "":
+            self.msg(self.factory.channel, newmsg)
+    	
+    def getsentence(self, prefix, msg):
+        brain.add_to_brain(msg, self.factory.chain_length, write_to_file=True)
+        sentence = brain.generate_sentence(msg, self.factory.chain_length, self.factory.max_words)
+        if sentence:
+            return prefix+sentence
+        else:
+            return msg
+
 
 class twistedBotFactory(protocol.ClientFactory):
 	protocol = twistedBot
