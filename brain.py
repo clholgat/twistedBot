@@ -20,10 +20,11 @@ def add_to_brain(msg, chain_length, write_to_file=False):
 
 def generate_sentence(msg, chain_length, max_words=10000):
 	buf = msg.strip().upper().split()[:chain_length]
-	message = buf[:]
-	if len(msg.split()) < chain_length:
+	if len(buf) < chain_length:
 		for i in xrange(len(msg), chain_length):
-			message.append(random.choice(markov[random.choice(markov.keys())]).upper())
+			buf = list(random.choice(markov.keys()))
+			#message.append(random.choice(markov[random.choice(markov.keys())]).upper())
+	message = buf[:]
 	for i in xrange(max_words):
 		try:
 			next_word = random.choice(markov[tuple(buf)]).upper()
@@ -35,7 +36,7 @@ def generate_sentence(msg, chain_length, max_words=10000):
 		del buf[0]
 		buf.append(next_word)
 	message = " ".join(message)
-	if len(message.split()) < chain_length:
+	if len(message.split()) <= chain_length or message == msg.upper():
 		return generate_sentence("", chain_length, max_words)
 	else:
 		return message
