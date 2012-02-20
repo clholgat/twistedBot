@@ -73,7 +73,7 @@ class twistedBot(irc.IRCClient):
         elif newmsg != "":
             self.msg(self.factory.channel, prefix+newmsg)
 
-    def parseMsg(self, msg):
+    def parseMsg(self, msg): 
         base = "http://twitter.com/anglebracket3/status/"
         if "twitlast" in msg:
             if hasattr(self, 'lastMsg') and self.lastMsg != "":
