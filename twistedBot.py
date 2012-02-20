@@ -83,49 +83,55 @@ class twistedBot(irc.IRCClient):
                 return ""
             return base + str(status.id)
         elif "kittify" in msg:
-            if not hasattr(self, 'lastMsg') or self.lastMsg == "":
-                return ""
-            print self.lastMsg
-            kitten = "kitten%d.jpg"%random.choice(range(1,10))
-            im = Image.open("kittens/"+kitten)
-            box = im.getbbox()
-            width = box[2]
-            height = box[3]
-            fsize = 70
-            lines = textwrap.wrap(self.lastMsg, int(width/fsize*1.65))
-            while len(lines) > 2:
-                fsize -= 2
-                lines = textwrap.wrap(self.lastMsg, int(width/fsize*1.65))
-
-            draw = ImageDraw.Draw(im)
-            font = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf", fsize)
-            #font = ImageFont.truetype("Ubuntu.ttf", fsize)
-            draw.text((10, 10), lines[0], font=font, fill="white")
-            if len(lines) > 1:
-                draw.text((10, height-10-fsize), lines[-1], font=font)
-            im.save("tmp.jpg")
-
-            response = cStringIO.StringIO()
-
-            c = pycurl.Curl()
-            values = [
-                ("key", "8d4b1396c3d2a3712b299594600e0068"),
-                ("image", (c.FORM_FILE, "tmp.jpg"))
-            ]
-            c.setopt(c.URL, "http://api.imgur.com/2/upload.json")
-            c.setopt(c.HTTPPOST, values)
-            c.setopt(c.WRITEFUNCTION, response.write)
-            c.perform()
-            c.close()
-            ret = json.loads(response.getvalue())
-            return str(ret['upload']['links']['original'])
-
+            return self.kittify()
+        elif "kitlast" in msg:
+            url = self.kittify()
+            status = self.factory.api.PostUpdate(url)
+            return base+str(status.id)+" "+url
         elif "source" in msg:
             return "https://github.com/clholgat/twistedBot"
         elif "help" in msg or "wat" in msg:
-            return "Commands: twitlast - tweets the last message; source - link to bot's source; kittify - kittenify the last message; help - this message"
+            return "Commands: twitlast - tweets the last message; source - link to bot's source; kittify - kittenify the last message; kitlast - kittenify and post image to twitter; help - this message"
         else:
             return ""
+
+    def kittify(self):
+        if not hasattr(self, 'lastMsg') or self.lastMsg == "":
+            return ""
+        print self.lastMsg
+        kitten = "kitten%d.jpg"%random.choice(range(1,10))
+        im = Image.open("kittens/"+kitten)
+        box = im.getbbox()
+        width = box[2]
+        height = box[3]
+        fsize = 70
+        lines = textwrap.wrap(self.lastMsg, int(width/fsize*1.65))
+        while len(lines) > 2:
+            fsize -= 2
+            lines = textwrap.wrap(self.lastMsg, int(width/fsize*1.65))
+
+        draw = ImageDraw.Draw(im)
+        font = ImageFont.truetype("/usr/share/fonts/truetype/ubuntu-font-family/Ubuntu-B.ttf", fsize)
+        #font = ImageFont.truetype("Ubuntu.ttf", fsize)
+        draw.text((10, 10), lines[0], font=font, fill="white")
+        if len(lines) > 1:
+            draw.text((10, height-10-fsize), lines[-1], font=font)
+        im.save("tmp.jpg")
+
+        response = cStringIO.StringIO()
+
+        c = pycurl.Curl()
+        values = [
+            ("key", "8d4b1396c3d2a3712b299594600e0068"),
+            ("image", (c.FORM_FILE, "tmp.jpg"))
+        ]
+        c.setopt(c.URL, "http://api.imgur.com/2/upload.json")
+        c.setopt(c.HTTPPOST, values)
+        c.setopt(c.WRITEFUNCTION, response.write)
+        c.perform()
+        c.close()
+        ret = json.loads(response.getvalue())
+        return str(ret['upload']['links']['original'])
 
     	
     def getsentence(self, msg):
